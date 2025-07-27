@@ -1,17 +1,18 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
-#include <queue>
 
 #include "IOBus.h"
 #include "MemoryBus.h"
+#include "instructions/Instruction.h"
 
 enum class CPUStates {
   OPCODE_FETCH,
   OPCODE_FETCHING,
-  OPCODE_FETCHED,
-  OPCODE_RUNNING,
+  OPCODE_DECODE,
+  OPCODE_EXECUTE,
   INTERRUPT_RUNNING,
   HALTED
 };
@@ -24,11 +25,14 @@ class CPU386 {
 
   void tick();
 
-  void read08();
-  void read16();
-  void read32();
+  uint32_t calculate_address(uint16_t segment, uint32_t address) const;
+  bool read08(uint16_t segment, uint32_t address);
+  bool read16(uint16_t segment, uint32_t address);
+  bool read32(uint16_t segment, uint32_t address);
 
  private:
+  void decode();
+
   union {
     uint32_t EIP;
     struct {
@@ -209,5 +213,8 @@ class CPU386 {
   bool address_size_override;
   bool lock;
   std::optional<uint16_t> segment_override;
+  uint16_t opcode;
+
+  std::shared_ptr<Instruction> current_instruction;
 };
 #pragma pack(pop)

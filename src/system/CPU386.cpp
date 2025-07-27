@@ -1,13 +1,14 @@
 #include "CPU386.h"
 
+#include <cstdint>
+#include <memory>
+#include <optional>
+
 #include "../utils/Logger.h"
 #include "IOBus.h"
 #include "MemoryBus.h"
-
-
 #include "instructions/Opcodes.h"
-#include <cstdint>
-#include <optional>
+#include "instructions/x00.h"
 
 CPU386::CPU386(MemoryBus& memory_bus, IOBus& io_bus)
     : memory_bus(memory_bus), io_bus(io_bus) {
@@ -50,23 +51,17 @@ void CPU386::Reset() {
   MYLOG("EFLAGS : 0x%08X", (int)EFLAGS);
   MYLOG("CR0 : 0x%08X    CR2 : 0x%08X    CR3 : 0x%08X", (int)CR0, (int)CR2,
         (int)CR3);
-  MYLOG("CS : 0x%08X    IP : 0x%08X    SS : 0x%08X    DS: 0x%08X    ES : 0x%08X    FS :  0x%08X    GS : 0x%08X",
+  MYLOG(
+      "CS : 0x%08X    IP : 0x%08X    SS : 0x%08X    DS: 0x%08X    ES : 0x%08X  "
+      "  FS :  0x%08X    GS : 0x%08X",
       (int)CS, (int)IP, (int)SS, (int)DS, (int)ES, (int)FS, (int)GS);
 }
 
 void CPU386::tick() {
   if (state == CPUStates::OPCODE_FETCH) {
-    if (!memory_bus.lock(this)) {
-      return;
+    if (read08(CS, EIP)) {
+      state = CPUStates::OPCODE_FETCHING;
     }
-
-    operand_size_override = false;
-    address_size_override = false;
-    lock = false;
-    segment_override = std::nullopt;
-
-    read08();
-    state = CPUStates::OPCODE_FETCHING;
   } else if (state == CPUStates::OPCODE_FETCHING) {
     if (!memory_bus.is_last_req_ready()) {
       return;
@@ -80,8 +75,113 @@ void CPU386::tick() {
     memory_bus.clear_state();
     if (val == Opcodes::OPERAND_SIZE_OVERRIDE) {
       operand_size_override = true;
+      state = CPUStates::OPCODE_FETCH;
     } else if (val == Opcodes::ADDRESS_SIZE_OVERRIDE) {
       address_size_override = true;
+      state = CPUStates::OPCODE_FETCH;
+    } else if (val == Opcodes::LOCK) {
+      lock = true;
+      state = CPUStates::OPCODE_FETCH;
+    } else if (val == Opcodes::ES_SEGMENT_OVERRIDE) {
+      segment_override = ES;
+      state = CPUStates::OPCODE_FETCH;
+    } else if (val == Opcodes::CS_SEGMENT_OVERRIDE) {
+      segment_override = CS;
+      state = CPUStates::OPCODE_FETCH;
+    } else if (val == Opcodes::SS_SEGMENT_OVERRIDE) {
+      segment_override = SS;
+      state = CPUStates::OPCODE_FETCH;
+    } else if (val == Opcodes::SS_SEGMENT_OVERRIDE) {
+      segment_override = DS;
+      state = CPUStates::OPCODE_FETCH;
+    } else if (val == Opcodes::FS_SEGMENT_OVERRIDE) {
+      segment_override = FS;
+      state = CPUStates::OPCODE_FETCH;
+    } else if (val == Opcodes::GS_SEGMENT_OVERRIDE) {
+      segment_override = GS;
+      state = CPUStates::OPCODE_FETCH;
+    } else {
+      if (opcode == TWO_BYTE_INSTRUCTION) {
+        opcode <<= 8;
+        opcode |= static_cast<uint8_t>(val);
+      } else {
+        opcode = static_cast<uint8_t>(val);
+      }
+
+      if (opcode == TWO_BYTE_INSTRUCTION) {
+        state = CPUStates::OPCODE_FETCH;
+      } else {
+        state = CPUStates::OPCODE_DECODE;
+      }
+    }
+  } else if (state == CPUStates::OPCODE_DECODE) {
+    decode();
+  } else if (state == CPUStates::OPCODE_EXECUTE) {
+    if (current_instruction->step(*this)) {
+      state = CPUStates::OPCODE_FETCH;
     }
   }
+}
+
+uint32_t CPU386::calculate_address(uint16_t segment, uint32_t address) const {
+  if (CR0_PE) {
+    return 0;
+  } else {
+    return ((segment * 16) + address);
+  }
+}
+
+bool CPU386::read08(uint16_t segment, uint32_t address) {
+  if (!memory_bus.lock(this)) {
+    return false;
+  }
+  if (!memory_bus.read08(calculate_address(segment, address))) {
+    return false;
+  }
+
+  return true;
+}
+
+bool CPU386::read16(uint16_t segment, uint32_t address) {
+  if (!memory_bus.lock(this)) {
+    return false;
+  }
+  if (!memory_bus.read08(calculate_address(segment, address))) {
+    return false;
+  }
+
+  return true;
+}
+
+bool CPU386::read32(uint16_t segment, uint32_t address) {
+  if (!memory_bus.lock(this)) {
+    return false;
+  }
+  if (!memory_bus.read08(calculate_address(segment, address))) {
+    return false;
+  }
+
+  return true;
+}
+
+void CPU386::decode() {
+  switch (opcode) {
+    case ADD_RM_REG: {
+      current_instruction = std::make_shared<x00>(
+          operand_size_override, address_size_override, lock, segment_override);
+      break;
+    }
+
+    case HLT: {
+      state = CPUStates::HALTED;
+      break;
+    }
+  }
+
+  operand_size_override = false;
+  address_size_override = false;
+  lock = false;
+  segment_override = std::nullopt;
+  opcode = 0xFFFF;
+  if (state != CPUStates::HALTED) state = CPUStates::OPCODE_EXECUTE;
 }
