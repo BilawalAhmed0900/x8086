@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "../utils/Logger.h"
-#include "Callbacks.h"
 #include "MemoryDevice.h"
 
 ROM::ROM(const uint32_t starting_addr, const uint32_t ending_addr,
@@ -16,7 +15,8 @@ ROM::ROM(const uint32_t starting_addr, const uint32_t ending_addr,
       ending_addr(ending_addr),
       control_line(RomControlSignal::IDLE),
       address_line(0),
-      data_line(0) {
+      data_line(0),
+      bits_needed(0) {
   if (starting_addr >= ending_addr) {
     MYLOG("Invalid starting address: %d, and ending address: %d",
           (int)starting_addr, (int)ending_addr);
@@ -24,8 +24,7 @@ ROM::ROM(const uint32_t starting_addr, const uint32_t ending_addr,
   }
 
   const uint32_t max_size = static_cast<int32_t>(ending_addr) -
-                            static_cast<int32_t>(starting_addr) -
-                            1 /* since end exclusive */;
+                            static_cast<int32_t>(starting_addr);
   if (data.size() > max_size) {
     MYLOG("Invalid ROM size. Max size allowed: %d", (int)max_size);
     throw std::runtime_error("Invalid size for data in ROM::ROM");
@@ -46,17 +45,17 @@ void ROM::tick() {
     MYLOG("Memory bus is idle, doing nothing");
     return;
   } else if (control_line == RomControlSignal::READ) {
-    if (bits_needed & 0xFFFFFFFF) {
+    if ((bits_needed & 0xFFFFFFFF) == 0xFFFFFFFF) {
       const uint32_t result =
           *reinterpret_cast<uint32_t*>(&data[address_line - starting_addr]);
       data_line = result;
       control_line = RomControlSignal::READY;
-    } else if (bits_needed & 0xFFFF) {
+    } else if ((bits_needed & 0xFFFF) == 0xFFFF) {
       const uint16_t result =
           *reinterpret_cast<uint16_t*>(&data[address_line - starting_addr]);
       data_line = result;
       control_line = RomControlSignal::READY;
-    } else if (bits_needed & 0xFF) {
+    } else if ((bits_needed & 0xFF) == 0xFF) {
       const uint8_t result =
           *reinterpret_cast<uint8_t*>(&data[address_line - starting_addr]);
       data_line = result;
@@ -65,15 +64,15 @@ void ROM::tick() {
       MYLOG("READ call with invalid byte_needed: %d", (int)bits_needed);
     }
   } else if (control_line == RomControlSignal::WRITE) {
-    if (bits_needed & 0xFFFFFFFF) {
+    if ((bits_needed & 0xFFFFFFFF) == 0xFFFFFFFF) {
       *reinterpret_cast<uint32_t*>(&data[address_line - starting_addr]) =
           static_cast<uint32_t>(data_line);
       control_line = RomControlSignal::READY;
-    } else if (bits_needed & 0xFFFF) {
+    } else if ((bits_needed & 0xFFFF) == 0xFFFF) {
       *reinterpret_cast<uint16_t*>(&data[address_line - starting_addr]) =
           static_cast<uint16_t>(data_line);
       control_line = RomControlSignal::READY;
-    } else if (bits_needed & 0xFF) {
+    } else if ((bits_needed & 0xFF) == 0xFF) {
       *reinterpret_cast<uint8_t*>(&data[address_line - starting_addr]) =
           static_cast<uint8_t>(data_line);
       control_line = RomControlSignal::READY;

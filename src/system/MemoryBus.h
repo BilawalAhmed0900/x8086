@@ -28,6 +28,7 @@ class MemoryBus {
   bool unlock(const void* device);
 
   void tick();
+  void device_ticks();
 
  private:
   bool read(const uint32_t address, const uint32_t bits_needed);
@@ -42,5 +43,5 @@ class MemoryBus {
 
   std::mutex mtx;
   size_t mtx_count;
-  void* owner;
+  const void* owner;
 };

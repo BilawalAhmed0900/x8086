@@ -16,7 +16,7 @@ class BIOSROM : public ROM {
   */
   constexpr static size_t STARTING_ADDR = 0xF0000;
   constexpr static size_t ENDING_ADDR = 0x100000;  // end exclusive
-  constexpr static size_t MAX_REAL_SIZE = ENDING_ADDR - STARTING_ADDR - 1;
+  constexpr static size_t MAX_REAL_SIZE = ENDING_ADDR - STARTING_ADDR;
 
  private:
 };

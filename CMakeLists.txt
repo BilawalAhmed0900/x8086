@@ -12,7 +12,7 @@ endif()
 project ("x8086")
 
 # Add source to this project's executable.
-add_executable (x8086 "src/x8086.cpp" "src/utils/Logger.h" "src/system/System.h" "src/system/MemoryBus.h" "src/system/ROM.h" "src/system/ROM.cpp" "src/system/BIOSROM.cpp" "src/system/System.cpp" "src/system/IOBus.h" "src/utils/LoadFile.h" "src/utils/LoadFile.cpp" "src/system/MemoryBus.cpp" "src/system/Callbacks.h" "src/system/CPU386.cpp" "src/system/CPU386.h" "src/system/MemoryDevice.cpp" "src/utils/NextId.h" "src/utils/NextId.cpp"  "src/system/instructions/InstructionMicrostep.h"  "src/system/instructions/Instruction.h" "src/system/instructions/Instruction.cpp" "src/system/instructions/Opcodes.h" "src/system/instructions/x00.h" "src/system/instructions/x00.cpp")
+add_executable (x8086 "src/x8086.cpp" "src/utils/Logger.h" "src/system/System.h" "src/system/MemoryBus.h" "src/system/ROM.h" "src/system/ROM.cpp" "src/system/BIOSROM.cpp" "src/system/System.cpp" "src/system/IOBus.h" "src/utils/LoadFile.h" "src/utils/LoadFile.cpp" "src/system/MemoryBus.cpp"  "src/system/CPU386.cpp" "src/system/CPU386.h" "src/system/MemoryDevice.cpp" "src/utils/NextId.h" "src/utils/NextId.cpp"  "src/system/instructions/InstructionMicrostep.h"  "src/system/instructions/Instruction.h" "src/system/instructions/Instruction.cpp" "src/system/instructions/Opcodes.h" "src/system/instructions/x00.h" "src/system/instructions/x00.cpp")
 
 target_compile_definitions(x8086 PRIVATE $<$<CONFIG:Debug>:IS_DEBUG_BUILD>)
 

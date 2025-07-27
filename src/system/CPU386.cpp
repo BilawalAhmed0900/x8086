@@ -41,7 +41,7 @@ void CPU386::Reset() {
     matching the BIOS address in the 1MB real-mode memory map.
   */
   CS = 0xF000;
-  IP = 0xFFF0;
+  EIP = 0xFFF0;
   state = CPUStates::OPCODE_FETCH;
   MYLOG("Initial CPU state:");
   MYLOG("EAX : 0x%08X    EBX : 0x%08X    ECX: 0x%08X    EDX : 0x%08X", (int)EAX,

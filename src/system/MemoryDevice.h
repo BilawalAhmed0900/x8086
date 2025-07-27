@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-#include "Callbacks.h"
-
 class MemoryDevice {
  public:
   MemoryDevice();

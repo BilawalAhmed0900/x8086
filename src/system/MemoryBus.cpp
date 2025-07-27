@@ -66,6 +66,7 @@ bool MemoryBus::lock(const void* device) {
       throw std::runtime_error("Cannot lock the bus");
     }
     mtx_count = 1;
+    owner = device;
     MYLOG("First locking call from owner: %p, new count: %d", device,
           (int)mtx_count);
     return true;
@@ -117,15 +118,15 @@ void MemoryBus::tick() {
       if (device->owns(address_line)) {
         MYLOG("Device: %d owns the address: %d, serving the READ request to it",
               (int)device->getid(), (int)address_line);
-        if (bits_needed & 0xFFFFFFFF) {
+        if ((bits_needed & 0xFFFFFFFF) == 0xFFFFFFFF) {
           device->read32(address_line);
           last_requst_device = device;
           control_line = BusControlLine::READ_SENT;
-        } else if (bits_needed & 0xFFFF) {
+        } else if ((bits_needed & 0xFFFF) == 0xFFFF) {
           device->read16(address_line);
           last_requst_device = device;
           control_line = BusControlLine::READ_SENT;
-        } else if (bits_needed & 0XFF) {
+        } else if ((bits_needed & 0XFF) == 0xFF) {
           device->read08(address_line);
           last_requst_device = device;
           control_line = BusControlLine::READ_SENT;
@@ -145,15 +146,15 @@ void MemoryBus::tick() {
         MYLOG(
             "Device: %d owns the address: %d, serving the WRITE request to it",
             (int)device->getid(), (int)address_line);
-        if (bits_needed & 0xFFFFFFFF) {
+        if ((bits_needed & 0xFFFFFFFF) == 0xFFFFFFFF) {
           device->write32(address_line, static_cast<uint32_t>(data_line));
           last_requst_device = device;
           control_line = BusControlLine::WRITE_SENT;
-        } else if (bits_needed & 0xFFFF) {
+        } else if ((bits_needed & 0xFFFF) == 0xFFFF) {
           device->write16(address_line, static_cast<uint16_t>(data_line));
           last_requst_device = device;
           control_line = BusControlLine::WRITE_SENT;
-        } else if (bits_needed & 0XFF) {
+        } else if ((bits_needed & 0xFF) == 0xFF) {
           device->write16(address_line, static_cast<uint8_t>(data_line));
           last_requst_device = device;
           control_line = BusControlLine::WRITE_SENT;
@@ -188,6 +189,12 @@ void MemoryBus::tick() {
     MYLOG(
         "Bus served the request, waiting for device to read it and clear "
         "first");
+  }
+}
+
+void MemoryBus::device_ticks() {
+  for (auto& device : memory_devices) {
+    device->tick();
   }
 }
 

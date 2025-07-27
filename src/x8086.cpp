@@ -9,6 +9,7 @@ int main(const int argc, const char* argv[]) {
   }
 
   System sys;
-  sys.Initialize(argv[1]);
+  sys.initialize(argv[1]);
+  sys.run();
   return 0;
 }

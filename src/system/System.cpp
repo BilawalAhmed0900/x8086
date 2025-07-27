@@ -13,7 +13,7 @@
 
 System::System() : memory_bus(), io_bus(), cpu(memory_bus, io_bus) {}
 
-void System::Initialize(const std::string& bios_path) {
+void System::initialize(const std::string& bios_path) {
   {
     std::vector<uint8_t> bios_data;
     if (!LoadFile(bios_path, bios_data)) {
@@ -30,5 +30,13 @@ void System::Initialize(const std::string& bios_path) {
       std::shared_ptr<BIOSROM> bios = std::make_shared<BIOSROM>(bios_data);
       memory_bus.AddMemoryDevice(bios);
     }
+  }
+}
+
+void System::run() {
+  while (true) {
+    cpu.tick();
+    memory_bus.tick();
+    memory_bus.device_ticks();
   }
 }
