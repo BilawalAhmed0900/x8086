@@ -92,7 +92,7 @@ void CPU386::tick() {
     } else if (val == Opcodes::SS_SEGMENT_OVERRIDE) {
       segment_override = SS;
       state = CPUStates::OPCODE_FETCH;
-    } else if (val == Opcodes::SS_SEGMENT_OVERRIDE) {
+    } else if (val == Opcodes::DS_SEGMENT_OVERRIDE) {
       segment_override = DS;
       state = CPUStates::OPCODE_FETCH;
     } else if (val == Opcodes::FS_SEGMENT_OVERRIDE) {
