@@ -73,6 +73,7 @@ void CPU386::tick() {
     }
 
     memory_bus.clear_state();
+    memory_bus.unlock(this);
     if (val == Opcodes::OPERAND_SIZE_OVERRIDE) {
       operand_size_override = true;
       state = CPUStates::OPCODE_FETCH;
