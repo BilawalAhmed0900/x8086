@@ -1,12 +1,32 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+#include <queue>
+
+#include "IOBus.h"
+#include "MemoryBus.h"
+
+enum class CPUStates {
+  OPCODE_FETCH,
+  OPCODE_FETCHING,
+  OPCODE_FETCHED,
+  OPCODE_RUNNING,
+  INTERRUPT_RUNNING,
+  HALTED
+};
 
 #pragma pack(push, 1)
 class CPU386 {
  public:
-  CPU386();
+  CPU386(MemoryBus &memory_bus, IOBus &io_bus);
   void Reset();
+
+  void tick();
+
+  void read08();
+  void read16();
+  void read32();
 
  private:
   union {
@@ -151,7 +171,8 @@ class CPU386 {
       uint32_t CR0_MP : 1;  // Monitor Coprocessor
       uint32_t CR0_EM : 1;  // Emulation
       uint32_t CR0_TS : 1;  // Task Switched
-      uint32_t CR0_ET : 1;  // Extension Type: always 1 on 80386 (387 FPU present)
+      uint32_t
+          CR0_ET : 1;  // Extension Type: always 1 on 80386 (387 FPU present)
       uint32_t CR0_NE : 1;  // Numeric Error
       uint32_t CR0_R1 : 10;
       uint32_t CR0_WP : 1;  // Write Protect
@@ -170,7 +191,7 @@ class CPU386 {
   struct {
     uint32_t base;
     uint16_t limit;
-  } gdtr;
+  } GDTR;
 
   static constexpr size_t REG_COUNT = 8;
   uint32_t *reg32[REG_COUNT] = {&EAX, &ECX, &EDX, &EBX, &ESP, &EBP, &ESI, &EDI};
@@ -179,5 +200,14 @@ class CPU386 {
 
   uint16_t CS, SS, DS, ES;
   uint16_t FS, GS;
+
+  MemoryBus &memory_bus;
+  IOBus &io_bus;
+  CPUStates state;
+
+  bool operand_size_override;
+  bool address_size_override;
+  bool lock;
+  std::optional<uint16_t> segment_override;
 };
 #pragma pack(pop)

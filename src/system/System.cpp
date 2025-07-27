@@ -11,6 +11,8 @@
 #include "../utils/Logger.h"
 #include "BIOSROM.h"
 
+System::System() : memory_bus(), io_bus(), cpu(memory_bus, io_bus) {}
+
 void System::Initialize(const std::string& bios_path) {
   {
     std::vector<uint8_t> bios_data;
@@ -20,13 +22,13 @@ void System::Initialize(const std::string& bios_path) {
     }
 
     if (bios_data.size() > BIOSROM::MAX_REAL_SIZE) {
-      std::unique_ptr<BIOSROM> bios =
-          std::make_unique<BIOSROM>(std::vector<uint8_t>{
+      std::shared_ptr<BIOSROM> bios =
+          std::make_shared<BIOSROM>(std::vector<uint8_t>{
               bios_data.end() - BIOSROM::MAX_REAL_SIZE, bios_data.end()});
-      memory_bus.AddMemoryDevice(std::move(bios));
+      memory_bus.AddMemoryDevice(bios);
     } else {
-      std::unique_ptr<BIOSROM> bios = std::make_unique<BIOSROM>(bios_data);
-      memory_bus.AddMemoryDevice(std::move(bios));
+      std::shared_ptr<BIOSROM> bios = std::make_shared<BIOSROM>(bios_data);
+      memory_bus.AddMemoryDevice(bios);
     }
   }
 }
