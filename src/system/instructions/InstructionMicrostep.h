@@ -2,4 +2,6 @@
 
 #include <functional>
 
-using InstructionMicrostep = std::function<void()>;
+#include "../CPU386.h"
+
+using InstructionMicrostep = std::function<bool(CPU386&)>;

@@ -12,7 +12,7 @@ class Instruction {
 
   virtual bool step(CPU386& cpu) = 0;
 
- private:
+ protected:
   bool operand_size_override;
   bool address_size_override;
   bool lock;

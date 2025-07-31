@@ -21,7 +21,7 @@ enum class CPUStates {
 class CPU386 {
  public:
   CPU386(MemoryBus &memory_bus, IOBus &io_bus);
-  void Reset();
+  void reset();
 
   void tick();
 
@@ -29,10 +29,14 @@ class CPU386 {
   bool read08(uint16_t segment, uint32_t address);
   bool read16(uint16_t segment, uint32_t address);
   bool read32(uint16_t segment, uint32_t address);
+  bool get_last_read(uint32_t &val);
+  bool lock_bus();
+  bool unlock_bus();
 
  private:
   void decode();
 
+ public:
   union {
     uint32_t EIP;
     struct {
@@ -205,6 +209,7 @@ class CPU386 {
   uint16_t CS, SS, DS, ES;
   uint16_t FS, GS;
 
+ private:
   MemoryBus &memory_bus;
   IOBus &io_bus;
   CPUStates state;

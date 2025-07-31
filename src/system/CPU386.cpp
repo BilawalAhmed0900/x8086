@@ -12,10 +12,10 @@
 
 CPU386::CPU386(MemoryBus& memory_bus, IOBus& io_bus)
     : memory_bus(memory_bus), io_bus(io_bus) {
-  Reset();
+  reset();
 }
 
-void CPU386::Reset() {
+void CPU386::reset() {
   EAX = ECX = EDX = EBX = ESP = EBP = ESI = EDI = 0;
 
   EFLAGS = 0;
@@ -63,17 +63,10 @@ void CPU386::tick() {
       state = CPUStates::OPCODE_FETCHING;
     }
   } else if (state == CPUStates::OPCODE_FETCHING) {
-    if (!memory_bus.is_last_req_ready()) {
-      return;
-    }
-
     uint32_t val;
-    if (!memory_bus.get_last_data(val)) {
+    if (!get_last_read(val)) {
       return;
     }
-
-    memory_bus.clear_state();
-    memory_bus.unlock(this);
     if (val == Opcodes::OPERAND_SIZE_OVERRIDE) {
       operand_size_override = true;
       state = CPUStates::OPCODE_FETCH;
@@ -137,6 +130,7 @@ bool CPU386::read08(uint16_t segment, uint32_t address) {
     return false;
   }
   if (!memory_bus.read08(calculate_address(segment, address))) {
+    memory_bus.unlock(this);
     return false;
   }
 
@@ -147,7 +141,8 @@ bool CPU386::read16(uint16_t segment, uint32_t address) {
   if (!memory_bus.lock(this)) {
     return false;
   }
-  if (!memory_bus.read08(calculate_address(segment, address))) {
+  if (!memory_bus.read16(calculate_address(segment, address))) {
+    memory_bus.unlock(this);
     return false;
   }
 
@@ -158,12 +153,31 @@ bool CPU386::read32(uint16_t segment, uint32_t address) {
   if (!memory_bus.lock(this)) {
     return false;
   }
-  if (!memory_bus.read08(calculate_address(segment, address))) {
+  if (!memory_bus.read32(calculate_address(segment, address))) {
+    memory_bus.unlock(this);
     return false;
   }
 
   return true;
 }
+
+bool CPU386::get_last_read(uint32_t& val) {
+  if (!memory_bus.is_last_req_ready()) {
+    return false;
+  }
+
+  if (!memory_bus.get_last_data(val)) {
+    return false;
+  }
+
+  memory_bus.clear_state();
+  memory_bus.unlock(this);
+  return true;
+}
+
+bool CPU386::lock_bus() { return memory_bus.lock(this); }
+
+bool CPU386::unlock_bus() { return memory_bus.unlock(this); }
 
 void CPU386::decode() {
   switch (opcode) {
