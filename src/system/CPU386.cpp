@@ -11,6 +11,10 @@
 #include "instructions/Opcodes.h"
 #include "instructions/x0000.h"
 
+CPUException::CPUException(uint16_t exception_number,
+             const std::optional<uint32_t>& error_code)
+    : exception_number(exception_number), error_code(error_code) {}
+
 CPU386::CPU386(MemoryBus& memory_bus, IOBus& io_bus)
     : memory_bus(memory_bus), io_bus(io_bus) {
   reset();
