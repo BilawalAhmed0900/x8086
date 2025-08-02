@@ -21,9 +21,6 @@ class Instruction {
   bool lock;
   std::optional<uint16_t> segment_override;
 
-  uint16_t exception_number;
-  uint32_t error_code;
-
   std::vector<InstructionMicrostep> steps;
   std::vector<InstructionMicrostep>::const_iterator step_it;
 };

@@ -20,18 +20,14 @@ bool Instruction::step(CPU386& cpu) {
     */
     if (step_it == steps.cend()) break;
     InstructionMicrostepResult result;
+
     try {
       result = (*step_it)(cpu);
     } catch (const CPUException& e) {
-      result = InstructionMicrostepResult::EXCEPTION;
-      exception_number = e.exception_number;
-      error_code = e.error_code;
-    }
-    
-    if (result == InstructionMicrostepResult::EXCEPTION) {
-      cpu.raise_exception(exception_number, error_code);
+      cpu.raise_exception(e.exception_number, e.error_code);
       return false;
     }
+
     if (result == InstructionMicrostepResult::NOT_COMPLETED) break;
     if (result == InstructionMicrostepResult::COMPLETED) {
       ++step_it;

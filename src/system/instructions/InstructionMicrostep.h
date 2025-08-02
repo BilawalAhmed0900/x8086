@@ -3,7 +3,7 @@
 #include <functional>
 
 enum InstructionMicrostepResult {
-  NOT_COMPLETED, COMPLETED, SKIPPED, EXCEPTION
+  NOT_COMPLETED, COMPLETED, SKIPPED
 };
 
 class CPU386;

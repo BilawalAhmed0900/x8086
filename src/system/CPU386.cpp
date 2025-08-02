@@ -119,7 +119,15 @@ void CPU386::tick() {
   }
 }
 
-uint32_t CPU386::calculate_address(uint16_t segment, uint32_t address) const {
+#define THROWS(x)
+/*
+  This function is one of the only functions throwing exceptions
+  This is done to stop the instruction micro-step at that very instruction
+
+  and come back to CPU.tick() gracefully to go into exception mode
+*/
+uint32_t CPU386::calculate_address(uint16_t segment, uint32_t address) const
+    THROWS(CPUException) {
   if (CR0_PE) {
     /*
       Requested privilage level
@@ -150,7 +158,7 @@ uint32_t CPU386::calculate_address(uint16_t segment, uint32_t address) const {
     const auto& descriptor =
         (TI == 0) ? GDTR.descriptors.at(index) : LDTR.descriptors.at(index);
 
-    constexpr size_t ACCESS_BIT_START = 5; // 2-bits at this position
+    constexpr size_t ACCESS_BIT_START = 5;  // 2-bits at this position
     constexpr size_t GRANULARITY_BIT = 3;
     uint8_t DPL = (descriptor.access >> ACCESS_BIT_START) & 0b11;
     if (EPL > DPL) {
