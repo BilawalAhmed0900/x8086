@@ -31,6 +31,18 @@ bool MemoryBus::read32(const uint32_t address) {
   return read(address, 0xFFFFFFFF);
 }
 
+bool MemoryBus::write08(const uint32_t address, const uint8_t val) {
+  return write(address, val, 0xFF);
+}
+
+bool MemoryBus::write16(const uint32_t address, const uint16_t val) {
+  return write(address, val, 0xFFFF);
+}
+
+bool MemoryBus::write32(const uint32_t address, const uint32_t val) {
+  return write(address, val, 0xFFFFFFFF);
+}
+
 bool MemoryBus::is_last_req_ready() const {
   return control_line == BusControlLine::READY;
 }
@@ -212,6 +224,26 @@ bool MemoryBus::read(const uint32_t address, const uint32_t bits_needed) {
     address_line = address;
     this->bits_needed = bits_needed;
     control_line = BusControlLine::READ;
+    return true;
+  }
+}
+
+bool MemoryBus::write(const uint32_t address, const uint32_t val,
+                      const uint32_t bits_needed) {
+  if (owner == nullptr) {
+    MYLOG("READ request received by bus without owner, ignoring it");
+    return false;
+  } else if (control_line != BusControlLine::IDLE) {
+    MYLOG(
+        "READ request received by bus owner : %p without clearing it, ignoring "
+        "it",
+        owner);
+    return false;
+  } else {
+    address_line = address;
+    this->bits_needed = bits_needed;
+    this->data_line = val;
+    control_line = BusControlLine::WRITE;
     return true;
   }
 }

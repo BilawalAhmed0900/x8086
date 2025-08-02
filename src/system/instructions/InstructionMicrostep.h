@@ -2,6 +2,10 @@
 
 #include <functional>
 
-#include "../CPU386.h"
+enum InstructionMicrostepResult {
+  NOT_COMPLETED, COMPLETED, SKIPPED, EXCEPTION
+};
 
-using InstructionMicrostep = std::function<bool(CPU386&)>;
+class CPU386;
+
+using InstructionMicrostep = std::function<InstructionMicrostepResult(CPU386&)>;

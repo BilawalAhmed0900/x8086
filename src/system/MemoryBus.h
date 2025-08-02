@@ -20,6 +20,10 @@ class MemoryBus {
   bool read16(const uint32_t address);
   bool read32(const uint32_t address);
 
+  bool write08(const uint32_t address, uint8_t val);
+  bool write16(const uint32_t address, uint16_t val);
+  bool write32(const uint32_t address, uint32_t val);
+
   bool is_last_req_ready() const;
   bool clear_state();
   bool get_last_data(uint32_t& result) const;
@@ -32,6 +36,7 @@ class MemoryBus {
 
  private:
   bool read(const uint32_t address, const uint32_t bits_needed);
+  bool write(const uint32_t address, const uint32_t val, const uint32_t bits_needed);
 
   uint32_t address_line;
   BusControlLine control_line;
