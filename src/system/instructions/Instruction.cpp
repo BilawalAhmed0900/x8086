@@ -19,15 +19,7 @@ bool Instruction::step(CPU386& cpu) {
       Maybe due to skipping, we have finished the instruction
     */
     if (step_it == steps.cend()) break;
-    InstructionMicrostepResult result;
-
-    try {
-      result = (*step_it)(cpu);
-    } catch (const CPUException& e) {
-      cpu.raise_exception(e.exception_number, e.error_code);
-      return false;
-    }
-
+    const InstructionMicrostepResult result = (*step_it)(cpu);
     if (result == InstructionMicrostepResult::NOT_COMPLETED) break;
     if (result == InstructionMicrostepResult::COMPLETED) {
       ++step_it;

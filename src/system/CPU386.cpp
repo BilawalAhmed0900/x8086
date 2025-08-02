@@ -112,9 +112,13 @@ void CPU386::tick() {
   } else if (state == CPUStates::OPCODE_DECODE) {
     decode();
   } else if (state == CPUStates::OPCODE_EXECUTE) {
-    if (current_instruction->step(*this)) {
-      current_instruction = nullptr;
-      state = CPUStates::OPCODE_FETCH;
+    try {
+      if (current_instruction->step(*this)) {
+        current_instruction = nullptr;
+        state = CPUStates::OPCODE_FETCH;
+      }
+    } catch (const CPUException& e) {
+      // handling here raise_exception(e.exception_number, e.error_code);
     }
   }
 }
