@@ -22,12 +22,12 @@ enum class CPUStates {
 
 class CPUException {
  public:
-  CPUException(uint16_t exception_number, uint32_t error_code)
+  CPUException(uint16_t exception_number, const std::optional<uint32_t>& error_code)
       : exception_number(exception_number), error_code(error_code) {}
 
  public:
   uint16_t exception_number;
-  uint32_t error_code;
+  std::optional<uint32_t> error_code;
 };
 
 #pragma pack(push, 1)

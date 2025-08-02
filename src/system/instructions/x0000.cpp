@@ -57,7 +57,7 @@ x0000::x0000(bool operand_size_override, bool address_size_override, bool lock,
                      : InstructionMicrostepResult::NOT_COMPLETED;
         }
         default: {
-          throw CPUException(CPU386::INVALID_OPCODE, 0);
+          throw CPUException(CPU386::INVALID_OPCODE, std::nullopt);
         }
       }
     }
@@ -97,7 +97,7 @@ x0000::x0000(bool operand_size_override, bool address_size_override, bool lock,
       if (!cpu.get_address_rm_byte(
               mode, r_m, displacement, this->segment_override,
               this->address_size_override, this->segment, this->address)) {
-        throw CPUException(CPU386::INVALID_OPCODE, 0);
+        throw CPUException(CPU386::INVALID_OPCODE, std::nullopt);
       }
 
       return cpu.read08(segment, address)
